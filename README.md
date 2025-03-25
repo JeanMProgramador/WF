@@ -1,2 +1,0 @@
-# WF
-sistema de votação
