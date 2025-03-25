@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultado da Votação</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .results {
+            text-align: center;
+        }
+
+        .results h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .btn-admin {
+            background-color: #f44336;
+        }
+
+        .btn-admin:hover {
+            background-color: #e53935;
+        }
+
+        .result-list {
+            text-align: left;
+            margin-bottom: 20px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .candidato-resultado {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        .candidato-resultado img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .candidato-resultado:hover {
+            background-color: #f0f0f0;
+        }
+
+        .admin-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .admin-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-section table th,
+        .admin-section table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .admin-section table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        canvas {
+            max-width: 100%;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <section class="results">
+            <h1>Resultado da Votação</h1>
+            <button class="btn" onclick="exibirResultado()">Atualizar Resultados</button>
+            <button class="btn" onclick="compartilharWhatsApp()">Compartilhar no WhatsApp</button>
+            <button class="btn" onclick="gerarPDF()">Gerar PDF</button>
+            <button class="btn" onclick="limparDados()">Limpar Dados de Votação</button>
+            <ul id="resultado" class="result-list"></ul>
+            <canvas id="graficoResultado"></canvas>
+            <canvas id="graficoPizza"></canvas>
+            <a href="index.html" class="back-link">Voltar para Votação</a>
+        </section>
+
+        <!-- Botão para acessar a página de administração -->
+        <button class="btn btn-admin" onclick="acessarAdmin()">Editar Configurações</button>
+
+        <!-- Seção para administrador -->
+        <section class="admin-section">
+            <h2>Lista de Eleitores</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody id="eleitoresLista">
+                    <!-- Dados dos eleitores serão inseridos aqui -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>Desenvolvido por [Jean Moura Soft]</p>
+    </footer>
+
+    <script>
+        let contagemVotos = {};
+
+        function exibirResultado() {
+            const resultadoDiv = document.getElementById("resultado");
+            resultadoDiv.innerHTML = "<p>Carregando resultados...</p>";
+
+            setTimeout(() => {
+                resultadoDiv.innerHTML = "";
+
+                const votos = JSON.parse(localStorage.getItem('votos')) || [];
+                const candidatos = JSON.parse(localStorage.getItem('candidatos')) || {};
+
+                if (votos.length === 0) {
+                    resultadoDiv.innerHTML = "<p>Nenhum voto registrado.</p>";
+                    return;
+                }
+
+                contagemVotos = votos.reduce((acc, voto) => {
+                    acc[voto.candidato] = (acc[voto.candidato] || 0) + 1;
+                    return acc;
+                }, {});
+
+                for (const [candidato, quantidade] of Object.entries(contagemVotos)) {
+                    const item = document.createElement('li');
+                    item.className = 'candidato-resultado';
+
+                    const candidatoInfo = Object.values(candidatos).find(c => c.nome === candidato);
+                    const imagem = candidatoInfo?.imagem || "img/default.jpg";
+
+                    item.innerHTML = `
+                        <img src="${imagem}" alt="Foto de ${candidato}">
+                        <strong>${candidato}</strong>: ${quantidade} voto(s)
+                    `;
+                    resultadoDiv.appendChild(item);
+                }
+
+                gerarGrafico();
+                gerarGraficoPizza();
+                exibirListaEleitores();
+            }, 500);
+        }
+
+        function exibirListaEleitores() {
+            const eleitoresLista = document.getElementById("eleitoresLista");
+
+            const eleitores = JSON.parse(localStorage.getItem('eleitores')) || [];
+
+            eleitoresLista.innerHTML = "";
+            eleitores.forEach(eleitor => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${eleitor.nome}</td>
+                    <td>${eleitor.telefone}</td>
+                    <td>${eleitor.email}</td>
+                `;
+                eleitoresLista.appendChild(row);
+            });
+        }
+
+        async function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.text("Resultado da Votação", 105, 20, { align: "center" });
+
+            doc.setFontSize(14);
+            doc.text("Votos por Candidato:", 10, 30);
+            let y = 40;
+            const votos = JSON.parse(localStorage.getItem('votos')) || [];
+            const contagemVotos = votos.reduce((acc, voto) => {
+                acc[voto.candidato] = (acc[voto.candidato] || 0) + 1;
+                return acc;
+            }, {});
+
+            for (const candidato in contagemVotos) {
+                doc.text(`${candidato}: ${contagemVotos[candidato]} voto(s)`, 10, y);
+                y += 10;
+            }
+
+            const graficoResultado = document.getElementById('graficoResultado');
+            const graficoPizza = document.getElementById('graficoPizza');
+
+            if (graficoResultado) {
+                const graficoResultadoImg = await html2canvas(graficoResultado).then(canvas => canvas.toDataURL('image/png'));
+                doc.addImage(graficoResultadoImg, 'PNG', 10, y, 190, 80);
+                y += 90;
+            }
+
+            if (graficoPizza) {
+                const graficoPizzaImg = await html2canvas(graficoPizza).then(canvas => canvas.toDataURL('image/png'));
+                doc.addImage(graficoPizzaImg, 'PNG', 10, y, 190, 80);
+            }
+
+            doc.save("resultado_votacao.pdf");
+        }
+
+        function gerarGrafico() {
+            const ctx = document.getElementById('graficoResultado').getContext('2d');
+            const labels = Object.keys(contagemVotos);
+            const data = Object.values(contagemVotos);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votos por Candidato',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function gerarGraficoPizza() {
+            const ctx = document.getElementById('graficoPizza').getContext('2d');
+            const labels = Object.keys(contagemVotos);
+            const data = Object.values(contagemVotos);
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votos por Candidato',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        function compartilharWhatsApp() {
+            if (Object.keys(contagemVotos).length === 0) {
+                alert("Nenhum voto registrado para compartilhar.");
+                return;
+            }
+
+            const mensagem = "Resultado da Votação:\n\n" + Object.entries(contagemVotos)
+                .map(([candidato, quantidade]) => `${candidato}: ${quantidade} voto(s)`)
+                .join("\n");
+
+            const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, "_blank");
+        }
+
+        function limparDados() {
+            if (confirm("Tem certeza de que deseja limpar todos os dados de votação? Esta ação não pode ser desfeita.")) {
+                localStorage.clear();
+                alert("Todos os dados de votação foram limpos.");
+                location.reload();
+            }
+        }
+
+        function acessarAdmin() {
+            const senha = prompt("Digite a senha para acessar as configurações:");
+            if (senha === "admin123") { // Substitua "admin123" pela senha desejada
+                window.location.href = "admin.html";
+            } else {
+                alert("Senha incorreta. Acesso negado.");
+            }
+        }
+    </script>
+</body>
+</html>

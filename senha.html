@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Digite a Senha</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('img/wf.png.jpeg'); /* Caminho da imagem */
+            background-size: cover; /* Ajusta a imagem para cobrir toda a tela */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
+            margin: 0;
+        }
+
+        .senha-container {
+            background-color: rgba(255, 255, 255, 0.9); /* Fundo branco com transparência */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="password"] {
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        p#senhaFeedback {
+            color: #d9534f;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="senha-container">
+        <h1>Acesso Restrito Apenas ao Supervisor</h1>
+        <input type="password" id="senhaInput" placeholder="Digite a senha">
+        <button onclick="verificarSenha()">Acessar</button>
+        <p id="senhaFeedback"></p>
+    </div>
+
+    <script>
+        function verificarSenha() {
+            const senhaDigitada = document.getElementById("senhaInput").value;
+            if (senhaDigitada === "1104") {
+                sessionStorage.setItem('senhaVerificada', 'true');
+                window.location.href = "resultado.html";
+            } else {
+                document.getElementById("senhaFeedback").textContent = "Senha incorreta.";
+            }
+        }
+    </script>
+</body>
+</html>

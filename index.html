@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Votação Presidente WF Locações</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('img/wf.png.jpeg'); /* Imagem de fundo */
+            background-size: cover; /* Ajusta a imagem para cobrir toda a tela */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
+            color: #333; /* Cinza escuro */
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9); /* Fundo branco com transparência */
+            border-radius: 15px;
+            padding: 20px;
+            width: 500px; /* Reduzido */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.5em; /* Destacado */
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2d6a4f; /* Verde escuro */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); /* Sombra no texto */
+        }
+
+        .user-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #2d6a4f; /* Verde escuro */
+        }
+
+        .candidate-display {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 15px;
+            background-color: #f0fdf4; /* Fundo branco para a área da foto */
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #2d6a4f; /* Verde escuro */
+        }
+
+        .candidate-display img {
+            width: 100px; /* Reduzido */
+            height: 100px; /* Reduzido */
+            border-radius: 10px;
+            margin-right: 15px;
+            object-fit: cover;
+            display: none; /* Esconde a imagem inicialmente */
+        }
+
+        .number-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .number-display input {
+            width: 60px; /* Reduzido */
+            height: 60px; /* Reduzido */
+            margin: 0 5px; /* Reduzido */
+            text-align: center;
+            border: 2px solid #2d6a4f; /* Verde escuro */
+            border-radius: 10px;
+            background-color: #f0fdf4; /* Verde claro */
+            color: #333; /* Cinza escuro */
+            font-size: 1.5em; /* Reduzido */
+            font-weight: bold;
+        }
+
+        .keyboard {
+            margin-top: 15px; /* Reduzido */
+        }
+
+        .number-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px; /* Reduzido */
+            margin-bottom: 15px; /* Reduzido */
+        }
+
+        .btn {
+            padding: 10px; /* Reduzido */
+            border: none;
+            border-radius: 10px;
+            font-size: 1em; /* Reduzido */
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        .btn.number {
+            background-color: #2d6a4f; /* Verde escuro */
+            color: #fff; /* Branco */
+        }
+
+        .btn.number:hover {
+            background-color: #40916c; /* Verde médio */
+            transform: scale(1.1);
+        }
+
+        .btn.white {
+            background-color: #e9ecef; /* Cinza claro */
+            color: #333; /* Cinza escuro */
+        }
+
+        .btn.white:hover {
+            background-color: #dee2e6; /* Cinza mais claro */
+            transform: scale(1.1);
+        }
+
+        .btn.orange {
+            background-color: #ff6f00; /* Laranja */
+            color: #fff; /* Branco */
+        }
+
+        .btn.orange:hover {
+            background-color: #e65c00; /* Laranja escuro */
+            transform: scale(1.1);
+        }
+
+        .btn.green {
+            background-color: #2d6a4f; /* Verde escuro */
+            color: #fff; /* Branco */
+        }
+
+        .btn.green:hover {
+            background-color: #40916c; /* Verde médio */
+            transform: scale(1.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #feedback {
+            margin-top: 15px; /* Reduzido */
+            font-size: 1em; /* Reduzido */
+        }
+
+        .result-link {
+            display: block;
+            margin-top: 15px; /* Reduzido */
+            text-align: center;
+            font-size: 0.9em; /* Reduzido */
+            color: #2d6a4f; /* Verde escuro */
+            text-decoration: none;
+        }
+
+        .result-link:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #2d6a4f; /* Verde escuro */
+            color: #fff; /* Branco */
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-info" id="userInfo"></div> <!-- Exibe o nome do usuário logado -->
+    <main class="container">
+        <section class="voting-panel">
+            <div class="title">
+                Votação Presidente<br>WF Locações
+            </div>
+            <div class="candidate-display">
+                <img id="candidatePhoto" src="img/default.jpg" alt="Foto do Candidato">
+                <div>
+                    <div id="candidateName" style="font-size: 1.2em; font-weight: bold; color: #2d6a4f;">Aguardando...</div>
+                </div>
+            </div>
+            <div class="number-display">
+                <input type="number" id="campo1" aria-label="Primeiro dígito do número" min="0" max="9" required>
+                <input type="number" id="campo2" aria-label="Segundo dígito do número" min="0" max="9" required>
+            </div>
+            <div class="keyboard">
+                <div class="number-buttons">
+                    <button type="button" class="btn number" onclick="inserir(1)">1</button>
+                    <button type="button" class="btn number" onclick="inserir(2)">2</button>
+                    <button type="button" class="btn number" onclick="inserir(3)">3</button>
+                    <button type="button" class="btn number" onclick="inserir(4)">4</button>
+                    <button type="button" class="btn number" onclick="inserir(5)">5</button>
+                    <button type="button" class="btn number" onclick="inserir(6)">6</button>
+                    <button type="button" class="btn number" onclick="inserir(7)">7</button>
+                    <button type="button" class="btn number" onclick="inserir(8)">8</button>
+                    <button type="button" class="btn number" onclick="inserir(9)">9</button>
+                    <button type="button" class="btn number" onclick="inserir(0)">0</button>
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="btn white" onclick="branco()">BRANCO</button>
+                    <button type="button" class="btn orange" onclick="corrige()">CORRIGE</button>
+                    <button type="button" class="btn green" onclick="votar()">CONFIRMA</button>
+                </div>
+            </div>
+        </section>
+        <div id="feedback"></div>
+        <a href="senha.html" class="result-link">Ver Resultado da Votação</a>
+    </main>
+
+    <footer>
+        <p>Desenvolvido por [Jean Moura Soft]</p>
+    </footer>
+
+    <script>
+        // Verifica se o usuário está logado
+        if (!sessionStorage.getItem('nome') || !sessionStorage.getItem('email')) {
+            alert("Por favor, faça login antes de acessar a votação.");
+            window.location.href = "login.html";
+        }
+
+        // Exibe o nome do usuário logado no canto superior esquerdo
+        document.getElementById("userInfo").innerText = `Logado como: ${sessionStorage.getItem('nome')}`;
+
+        // Carrega os candidatos do localStorage
+        const candidatos = JSON.parse(localStorage.getItem('candidatos')) || {};
+
+        function inserir(valor) {
+            const campo1 = document.getElementById("campo1");
+            const campo2 = document.getElementById("campo2");
+
+            if (campo1.value === "") {
+                campo1.value = valor;
+            } else if (campo2.value === "") {
+                campo2.value = valor;
+            }
+
+            atualizarCandidato();
+        }
+
+        function atualizarCandidato() {
+            const campo1 = document.getElementById("campo1").value;
+            const campo2 = document.getElementById("campo2").value;
+
+            const numero = parseInt(campo1 + campo2);
+
+            const candidato = Object.values(candidatos).find(c => parseInt(c.numero) === numero);
+
+            if (candidato) {
+                document.getElementById("candidateName").innerText = candidato.nome;
+                const photo = document.getElementById("candidatePhoto");
+                photo.src = candidato.imagem;
+                photo.style.display = "block"; // Exibe a foto
+            } else {
+                document.getElementById("candidateName").innerText = "Candidato Inválido";
+                const photo = document.getElementById("candidatePhoto");
+                photo.src = "img/default.jpg";
+                photo.style.display = "none"; // Esconde a foto
+            }
+        }
+
+        function corrige() {
+            document.getElementById("campo1").value = "";
+            document.getElementById("campo2").value = "";
+            document.getElementById("candidateName").innerText = "Aguardando...";
+            const photo = document.getElementById("candidatePhoto");
+            photo.src = "img/default.jpg";
+            photo.style.display = "none"; // Esconde a foto
+        }
+
+        function votar() {
+            if (sessionStorage.getItem('votou') === 'true') {
+                document.getElementById('feedback').innerHTML = '<p style="color: red;">Você já votou. Apenas um voto é permitido por login.</p>';
+                return;
+            }
+
+            const campo1 = document.getElementById("campo1").value;
+            const campo2 = document.getElementById("campo2").value;
+
+            if (campo1 === "" || campo2 === "") {
+                document.getElementById('feedback').innerHTML = '<p style="color: red;">Preencha ambos os campos antes de confirmar o voto.</p>';
+                return;
+            }
+
+            const numero = parseInt(campo1 + campo2); // Concatena os dois campos e converte para número
+
+            const candidato = Object.values(candidatos).find(c => parseInt(c.numero) === numero);
+
+            if (candidato) {
+                const votos = JSON.parse(localStorage.getItem('votos')) || [];
+                votos.push({ candidato: candidato.nome });
+                localStorage.setItem('votos', JSON.stringify(votos));
+
+                sessionStorage.setItem('votou', 'true');
+
+                document.getElementById('feedback').innerHTML = `<p style="color: green;">Voto confirmado em ${candidato.nome}.</p>`;
+                corrige(); // Limpa os campos após o voto
+            } else {
+                document.getElementById('feedback').innerHTML = '<p style="color: red;">Candidato inválido.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

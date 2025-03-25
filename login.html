@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('img/wf.png.jpeg'); /* Caminho da imagem */
+            background-size: cover; /* Ajusta a imagem para cobrir toda a tela */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 30px;
+            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .login-container h1 {
+            margin-bottom: 20px;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="email"],
+        .login-container input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .login-container button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <input type="text" id="nomeInput" placeholder="Nome Completo">
+        <input type="tel" id="telefoneInput" placeholder="Telefone">
+        <input type="email" id="emailInput" placeholder="Email">
+        <button onclick="salvarLogin()">Continuar</button>
+    </div>
+
+    <script>
+        function salvarLogin() {
+            const nome = document.getElementById("nomeInput").value;
+            const telefone = document.getElementById("telefoneInput").value;
+            const email = document.getElementById("emailInput").value;
+
+            if (!nome || !telefone || !email) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // Salva os dados do eleitor no localStorage
+            const eleitor = { nome, telefone, email };
+            const eleitores = JSON.parse(localStorage.getItem('eleitores')) || [];
+            eleitores.push(eleitor);
+            localStorage.setItem('eleitores', JSON.stringify(eleitores));
+
+            // Salva o nome e o email no sessionStorage para uso temporário
+            sessionStorage.setItem('nome', nome);
+            sessionStorage.setItem('email', email);
+
+            // Reseta a flag de voto ao fazer login
+            sessionStorage.setItem('votou', 'false');
+
+            // Redireciona para a página de votação
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
