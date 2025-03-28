@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -139,7 +140,6 @@
             <button class="btn" onclick="exibirResultado()">Atualizar Resultados</button>
             <button class="btn" onclick="compartilharWhatsApp()">Compartilhar no WhatsApp</button>
             <button class="btn" onclick="gerarPDF()">Gerar PDF</button>
-            <button class="btn" onclick="limparDados()">Limpar Dados de Votação</button>
             <ul id="resultado" class="result-list"></ul>
             <canvas id="graficoResultado"></canvas>
             <canvas id="graficoPizza"></canvas>
@@ -172,52 +172,66 @@
     </footer>
 
     <script>
+        // Configuração do Supabase
+        const supabaseUrl = 'https://sua-url-do-supabase.supabase.co'; // Substitua pela URL do seu projeto
+        const supabaseKey = 'sua-chave-publica'; // Substitua pela chave pública do seu projeto
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         let contagemVotos = {};
 
-        function exibirResultado() {
+        async function exibirResultado() {
             const resultadoDiv = document.getElementById("resultado");
             resultadoDiv.innerHTML = "<p>Carregando resultados...</p>";
 
-            setTimeout(() => {
-                resultadoDiv.innerHTML = "";
+            const { data: votos, error } = await supabase
+                .from('votos')
+                .select('candidato_id, candidatos (nome, imagem)');
 
-                const votos = JSON.parse(localStorage.getItem('votos')) || [];
-                const candidatos = JSON.parse(localStorage.getItem('candidatos')) || {};
+            if (error) {
+                console.error('Erro ao carregar votos:', error);
+                resultadoDiv.innerHTML = "<p>Erro ao carregar resultados.</p>";
+                return;
+            }
 
-                if (votos.length === 0) {
-                    resultadoDiv.innerHTML = "<p>Nenhum voto registrado.</p>";
-                    return;
-                }
+            contagemVotos = votos.reduce((acc, voto) => {
+                const candidato = voto.candidatos.nome;
+                acc[candidato] = (acc[candidato] || 0) + 1;
+                return acc;
+            }, {});
 
-                contagemVotos = votos.reduce((acc, voto) => {
-                    acc[voto.candidato] = (acc[voto.candidato] || 0) + 1;
-                    return acc;
-                }, {});
+            resultadoDiv.innerHTML = "";
 
-                for (const [candidato, quantidade] of Object.entries(contagemVotos)) {
-                    const item = document.createElement('li');
-                    item.className = 'candidato-resultado';
+            for (const [candidato, quantidade] of Object.entries(contagemVotos)) {
+                const item = document.createElement('li');
+                item.className = 'candidato-resultado';
 
-                    const candidatoInfo = Object.values(candidatos).find(c => c.nome === candidato);
-                    const imagem = candidatoInfo?.imagem || "img/default.jpg";
+                const candidatoInfo = votos.find(v => v.candidatos.nome === candidato);
+                const imagem = candidatoInfo?.candidatos.imagem || "img/default.jpg";
 
-                    item.innerHTML = `
-                        <img src="${imagem}" alt="Foto de ${candidato}">
-                        <strong>${candidato}</strong>: ${quantidade} voto(s)
-                    `;
-                    resultadoDiv.appendChild(item);
-                }
+                item.innerHTML = `
+                    <img src="${imagem}" alt="Foto de ${candidato}">
+                    <strong>${candidato}</strong>: ${quantidade} voto(s)
+                `;
+                resultadoDiv.appendChild(item);
+            }
 
-                gerarGrafico();
-                gerarGraficoPizza();
-                exibirListaEleitores();
-            }, 500);
+            gerarGrafico();
+            gerarGraficoPizza();
+            exibirListaEleitores(); // Atualizar a lista de eleitores
         }
 
-        function exibirListaEleitores() {
+        async function exibirListaEleitores() {
             const eleitoresLista = document.getElementById("eleitoresLista");
 
-            const eleitores = JSON.parse(localStorage.getItem('eleitores')) || [];
+            const { data: eleitores, error } = await supabase
+                .from('eleitores')
+                .select('nome, telefone, email');
+
+            if (error) {
+                console.error('Erro ao carregar eleitores:', error);
+                eleitoresLista.innerHTML = "<tr><td colspan='3'>Erro ao carregar eleitores.</td></tr>";
+                return;
+            }
 
             eleitoresLista.innerHTML = "";
             eleitores.forEach(eleitor => {
@@ -241,14 +255,9 @@
             doc.setFontSize(14);
             doc.text("Votos por Candidato:", 10, 30);
             let y = 40;
-            const votos = JSON.parse(localStorage.getItem('votos')) || [];
-            const contagemVotos = votos.reduce((acc, voto) => {
-                acc[voto.candidato] = (acc[voto.candidato] || 0) + 1;
-                return acc;
-            }, {});
 
-            for (const candidato in contagemVotos) {
-                doc.text(`${candidato}: ${contagemVotos[candidato]} voto(s)`, 10, y);
+            for (const [candidato, quantidade] of Object.entries(contagemVotos)) {
+                doc.text(`${candidato}: ${quantidade} voto(s)`, 10, y);
                 y += 10;
             }
 
@@ -267,6 +276,29 @@
             }
 
             doc.save("resultado_votacao.pdf");
+        }
+
+        function compartilharWhatsApp() {
+            if (Object.keys(contagemVotos).length === 0) {
+                alert("Nenhum voto registrado para compartilhar.");
+                return;
+            }
+
+            const mensagem = "Resultado da Votação:\n\n" + Object.entries(contagemVotos)
+                .map(([candidato, quantidade]) => `${candidato}: ${quantidade} voto(s)`)
+                .join("\n");
+
+            const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, "_blank");
+        }
+
+        function acessarAdmin() {
+            const senha = prompt("Digite a senha para acessar as configurações:");
+            if (senha === "admin123") { // Substitua "admin123" pela senha desejada
+                window.location.href = "admin.html";
+            } else {
+                alert("Senha incorreta. Acesso negado.");
+            }
         }
 
         function gerarGrafico() {
@@ -337,37 +369,6 @@
                     }
                 }
             });
-        }
-
-        function compartilharWhatsApp() {
-            if (Object.keys(contagemVotos).length === 0) {
-                alert("Nenhum voto registrado para compartilhar.");
-                return;
-            }
-
-            const mensagem = "Resultado da Votação:\n\n" + Object.entries(contagemVotos)
-                .map(([candidato, quantidade]) => `${candidato}: ${quantidade} voto(s)`)
-                .join("\n");
-
-            const url = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-            window.open(url, "_blank");
-        }
-
-        function limparDados() {
-            if (confirm("Tem certeza de que deseja limpar todos os dados de votação? Esta ação não pode ser desfeita.")) {
-                localStorage.clear();
-                alert("Todos os dados de votação foram limpos.");
-                location.reload();
-            }
-        }
-
-        function acessarAdmin() {
-            const senha = prompt("Digite a senha para acessar as configurações:");
-            if (senha === "admin123") { // Substitua "admin123" pela senha desejada
-                window.location.href = "admin.html";
-            } else {
-                alert("Senha incorreta. Acesso negado.");
-            }
         }
     </script>
 </body>
